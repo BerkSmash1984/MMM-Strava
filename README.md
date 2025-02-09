@@ -7,6 +7,11 @@ This is a fork of the [MMM-Strava](https://github.com/ianperrin/MMM-Strava) Magi
 - Display yearly running goal progress with miles ahead/behind pace.
 - Customizable font sizes and table styling.
 
+As shown in the red boxes below:
+
+![image](https://github.com/user-attachments/assets/875370e4-bdbd-45fc-a781-f8a07d4af986)
+
+
 For detailed documentation, refer to the [original MMM-Strava README](https://github.com/ianperrin/MMM-Strava).
 
 ## Original MMM-Strava README.md comments below
