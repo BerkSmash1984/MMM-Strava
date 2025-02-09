@@ -53,7 +53,7 @@ For the Annual Mileage Goal progress tracker, add the module to the config file 
              config: {
                        debug: false,
                        client_id: "your_strava_client_id",
-                       client_secret: "YOUR STRAVA CLIENT SECRET HERE",
+                       client_secret: "your_strava_api_client_secret",
                        mode: "goal",  // New mode for goal
                        goalDistance: 2000 * 1609.34, // 2000 miles converted to meters. Put your annual mileage goal number here.
                        updateInterval: "86400000",
