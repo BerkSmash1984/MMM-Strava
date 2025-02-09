@@ -1,5 +1,16 @@
 # MagicMirror Module: MMM-Strava
 
+This is a fork of the [MMM-Strava](https://github.com/ianperrin/MMM-Strava) MagicMirror module, originally created by Ian Perrin. 
+
+## New Features in This Fork:
+- Added shoe mileage tracker functionality.
+- Display yearly running goal progress with miles ahead/behind pace.
+- Customizable font sizes and table styling.
+
+For detailed documentation, refer to the [original MMM-Strava README](https://github.com/ianperrin/MMM-Strava).
+
+## Original MMM-Strava README.md comments below
+
 A MagicMirror Module for displaying your Strava data.
 
 [![Platform](https://img.shields.io/badge/platform-MagicMirror-informational)](https://MagicMirror.builders)

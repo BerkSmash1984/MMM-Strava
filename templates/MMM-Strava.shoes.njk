@@ -1,0 +1,45 @@
+<div class="MMM-Strava">
+    {% if loading %}
+        <div class="loading">
+            Loading Shoe Mileage Data...
+        </div>
+    {% else %}
+        {% if shoeData.length > 0 %}
+            <div class="shoe-table-section">
+                <h2>Shoe Mileage</h2>
+                <table class="shoe-table">
+                    <thead>
+                        <tr>
+                            <th>Shoe Name</th>
+                            <th>Total Mileage</th>
+                            <th>Miles Remaining</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for shoe in shoeData %}
+                            <tr class="
+                                {% if shoe.remaining <= 0 %} mileage-limit-reached
+                                {% elif shoe.remaining < 50 %} mileage-near-limit
+                                {% endif %}
+                            ">
+                                <td>{{ shoe.name }}</td>
+                                <td>{{ shoe.mileage | formatShoeDistance(config.digits, true) }}</td>
+                                <td>
+                                    {% if shoe.remaining is not none %}
+                                        {{ shoe.remaining | roundValue(config.digits) }} mi
+                                    {% else %}
+                                        No limit set
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="no-shoe-data">
+                No shoe mileage data available.
+            </div>
+        {% endif %}
+    {% endif %}
+</div>

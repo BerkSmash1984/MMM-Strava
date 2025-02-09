@@ -1,0 +1,31 @@
+<div class="MMM-Strava">
+    {% if loading %}
+        <div class="loading">
+            Loading Yearly Goal Data...
+        </div>
+    {% else %}
+        {% if goalData %}
+            <div class="yearly-goal-section">
+                <h2>Yearly Running Goal</h2>
+                <p>{{ goalData.ytdRunDistance | roundValue(1) }} / {{ goalData.goalDistance | roundValue(1) }} mi</p>
+
+                <div class="goal-progress-bar">
+                    <div class="goal-progress" style="width: {{ (goalData.ytdRunDistance / goalData.goalDistance) * 100 }}%;"></div>
+                </div>
+
+                <p>
+                    {{ goalData.milesAheadOfPace | roundValue(1) }} mi 
+                    {% if goalData.milesAheadOfPace >= 0 %}
+                        ahead of pace
+                    {% else %}
+                        behind pace
+                    {% endif %}
+                </p>
+            </div>
+        {% else %}
+            <div class="no-goal-data">
+                No yearly goal data available.
+            </div>
+        {% endif %}
+    {% endif %}
+</div>

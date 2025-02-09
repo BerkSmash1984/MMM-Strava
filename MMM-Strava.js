@@ -118,6 +118,15 @@ Module.register("MMM-Strava", {
 				this.stravaData = payload.data;
 				this.loading = false;
 				this.updateDom(this.config.animationSpeed);
+			} else if (notification === "SHOE_DATA") {  // New block for SHOE_DATA
+				this.shoeData = payload.data;
+				this.loading = false;
+				this.updateDom(this.config.animationSpeed);
+			} else if (notification === "YEARLY_GOAL_DATA") {  // New block for YEARLY_GOAL_DATA
+				console.log("Received yearly goal data in MMM-Strava.js:", payload); // Debugging line
+				this.goalData = payload;  // Assign the entire payload as goalData
+				this.loading = false;
+				this.updateDom(this.config.animationSpeed);
 			} else if (notification === "ERROR") {
 				this.loading = false;
 				this.error = payload.data.message;
@@ -152,6 +161,8 @@ Module.register("MMM-Strava", {
 			loading: this.loading,
 			error: this.error || null,
 			data: this.stravaData || {},
+			shoeData: this.shoeData || [], // This line ensures shoeData is passed to the template
+			goalData: this.goalData || null, // This will be used in MMM-Strava.goal.njk
 			chart: { bars: this.config.period === "ytd" ? moment.monthsShort() : moment.weekdaysShort() }
 		};
 	},
@@ -205,6 +216,7 @@ Module.register("MMM-Strava", {
 		env.addFilter("getLabel", this.getLabel.bind(this));
 		env.addFilter("formatTime", this.formatTime.bind(this));
 		env.addFilter("formatDistance", this.formatDistance.bind(this));
+		env.addFilter("formatShoeDistance", this.formatShoeDistance.bind(this)); // Register the new filter for shoe mileage
 		env.addFilter("formatElevation", this.formatElevation.bind(this));
 		env.addFilter("roundValue", this.roundValue.bind(this));
 		env.addFilter("getRadialLabelTransform", this.getRadialLabelTransform.bind(this));
@@ -248,6 +260,11 @@ Module.register("MMM-Strava", {
 		const distanceMultiplier = this.config.units === "imperial" ? 0.0006213712 : 0.001;
 		const distanceUnits = this.config.units === "imperial" ? " mi" : " km";
 		return this.formatNumber(value, distanceMultiplier, digits, showUnits ? distanceUnits : null);
+	},
+	//formationShoeDistance
+	formatShoeDistance: function (value, digits, showUnits) {
+		const distanceUnits = this.config.units === "imperial" ? " mi" : " km";
+		return value.toFixed(digits) + (showUnits ? distanceUnits : "");
 	},
 	// formatElevation
 	formatElevation: function (value, digits, showUnits) {

@@ -64,65 +64,36 @@ module.exports = NodeHelper.create({
 	 * @param {object.<string, object>} payload - Detailed payload of the notification (key: module identifier, value: config object).
 	 */
 	socketNotificationReceived: function (notification, payload) {
-    var self = this;
-    this.log("Received notification: " + notification);
-
-    if (notification === "SET_CONFIG") {
-		console.log("Received SET_CONFIG in node_helper with payload:", payload); // Debugging line
-        // Enable debug if set
-        if (payload.config.debug) {
-            this.debug = true;
-        }
-
-        // Validate module config
-        if (payload.config.access_token || payload.config.strava_id) {
-            this.log(`Legacy config in use for ${payload.identifier}`);
-            this.sendSocketNotification("WARNING", {
-                identifier: payload.identifier,
-                data: { message: "Strava authorisation has changed. Please update your config." }
-            });
-        }
-
-        // Initialize and store module config
-        if (!(payload.identifier in this.configs)) {
-            this.configs[payload.identifier] = {};
-        }
-        this.configs[payload.identifier].config = payload.config;
-
-        // Check for token authorization
-        this.readTokens();
-        if (payload.config.client_id && !(payload.config.client_id in this.tokens)) {
-            this.log(`Unauthorised client id for ${payload.identifier}`);
-            this.sendSocketNotification("ERROR", {
-                identifier: payload.identifier,
-                data: { message: `Client id unauthorised - please visit <a href="/${self.name}/auth/">/${self.name}/auth/</a>` }
-            });
-        }
-
-        // Schedule API calls for run tracking
-        this.getData(payload.identifier);
-        setInterval(function () {
-            self.getData(payload.identifier);
-        }, payload.config.reloadInterval);
-
-        // If mode is "shoes", call getShoeData
-        if (payload.config.mode === "shoes") {
-            const accessToken = this.tokens[payload.config.client_id].token.access_token;
-            this.getShoeData(payload.identifier, accessToken, payload.config.gear_ids);
-        }
-		
-		// Call getYearlyGoalData if goal tracking is enabled
-		if (payload.config.goalDistance) { // Check if goalDistance is specified
-			const accessToken = this.tokens[payload.config.client_id].token.access_token;
-			console.log("Calling getYearlyGoalData with access token and goal distance"); // Debugging line
-			this.getYearlyGoalData(
-				payload.identifier,
-				accessToken,
-				payload.config.goalDistance
-			);
-        }
-    }
-},
+		var self = this;
+		this.log("Received notification: " + notification);
+		if (notification === "SET_CONFIG") {
+			// debug?
+			if (payload.config.debug) {
+				this.debug = true;
+			}
+			// Validate module config
+			if (payload.config.access_token || payload.config.strava_id) {
+				this.log(`Legacy config in use for ${payload.identifier}`);
+				this.sendSocketNotification("WARNING", { identifier: payload.identifier, data: { message: "Strava authorisation has changed. Please update your config." } });
+			}
+			// Initialise and store module config
+			if (!(payload.identifier in this.configs)) {
+				this.configs[payload.identifier] = {};
+			}
+			this.configs[payload.identifier].config = payload.config;
+			// Check for token authorisations
+			this.readTokens();
+			if (payload.config.client_id && !(payload.config.client_id in this.tokens)) {
+				this.log(`Unauthorised client id for ${payload.identifier}`);
+				this.sendSocketNotification("ERROR", { identifier: payload.identifier, data: { message: `Client id unauthorised - please visit <a href="/${self.name}/auth/">/${self.name}/auth/</a>` } });
+			}
+			// Schedule API calls
+			this.getData(payload.identifier);
+			setInterval(function () {
+				self.getData(payload.identifier);
+			}, payload.config.reloadInterval);
+		}
+	},
 	/**
 	 * @function createRoutes
 	 * @description Creates the routes for the authorisation flow.
@@ -505,96 +476,5 @@ module.exports = NodeHelper.create({
 		if (this.debug) {
 			console.log(this.name + ":", JSON.stringify(msg));
 		}
-	},
-	/**
-	 * @function getShoeData
-	 * @description gets mileage per shoe via gear ID
-	 */
-	getShoeData: async function (moduleIdentifier, accessToken, gearIds) {
-		const self = this;
-		const shoeData = [];
-
-		try {
-			for (const gearId of gearIds) {
-				const options = { access_token: accessToken, id: gearId };
-				const data = await strava.gear.get(options);
-
-				// Log fetched values for debugging
-				console.log("Shoe data for", gearId, ":", {
-					name: data.name,
-					distance: data.distance,
-					notification_distance: data.notification_distance
-				});
-
-				// Use nickname if available, otherwise fall back to name
-				const shoeName = data.nickname || data.name;
-				
-				// Convert mileage to miles (assuming distance is in meters)
-				const totalMileageMiles = data.distance * 0.0006213712;
-
-				// Calculate remaining mileage based on notification_distance already in miles
-				let remainingMileage = null;
-				if (data.notification_distance) {
-					remainingMileage = data.notification_distance - totalMileageMiles;
-				} else {
-					remainingMileage = "No limit set"; // Optional message if no limit is defined
-				}
-
-				shoeData.push({ id: gearId, name: shoeName, mileage: totalMileageMiles, remaining: remainingMileage });
-			}
-			console.log("Shoe data fetched successfully:", shoeData);
-			self.sendSocketNotification("SHOE_DATA", { identifier: moduleIdentifier, data: shoeData });
-		} catch (error) {
-			console.error("Failed to retrieve shoe data for module:", moduleIdentifier, "Error:", error);
-		}
-	},
-	/**
-	* @function getYearlyGoal
-	* @description gets yearly running goal set in Strava
-	*/
-	getYearlyGoalData: async function (moduleIdentifier, accessToken, goalDistance) {
-		console.log("Starting getYearlyGoalData for module:", moduleIdentifier);
-		const self = this;
-
-		try {
-			const options = { access_token: accessToken };
-
-			// Step 1: Get the authenticated athlete’s ID
-			const athlete = await strava.athlete.get(options);
-			const athleteId = athlete.id;
-			console.log("Retrieved Athlete ID:", athleteId);
-
-			// Step 2: Use the athlete ID to get the athlete’s stats
-			const stats = await strava.athletes.stats({ id: athleteId, ...options });
-
-			const ytdRunDistance = stats.ytd_run_totals.distance; // in meters
-			const remainingDistance = goalDistance - ytdRunDistance;
-
-			// Calculate the target distance for today based on the goal distance and day of the year
-			const today = new Date();
-			const startOfYear = new Date(today.getFullYear(), 0, 1);
-			const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
-			const totalDaysInYear = (new Date(today.getFullYear(), 11, 31) - startOfYear) / (1000 * 60 * 60 * 24);
-			const targetDistanceSoFar = (goalDistance * dayOfYear) / totalDaysInYear;
-
-			// Calculate miles ahead or behind pace
-			const milesAheadOfPace = (ytdRunDistance - targetDistanceSoFar) * 0.000621371; // Convert to miles
-
-			console.log("Fetched YTD run distance:", ytdRunDistance);
-			console.log("Goal Distance (meters):", goalDistance);
-			console.log("Remaining Distance (meters):", remainingDistance);
-			console.log("Miles Ahead of Pace:", milesAheadOfPace);
-
-			// Send the yearly goal data to the front end
-			self.sendSocketNotification("YEARLY_GOAL_DATA", {
-				identifier: moduleIdentifier,
-				goalDistance: goalDistance * 0.000621371, // Convert to miles
-				ytdRunDistance: ytdRunDistance * 0.000621371, // Convert to miles
-				remainingDistance: remainingDistance * 0.000621371, // Convert to miles
-				milesAheadOfPace: milesAheadOfPace // Already in miles
-			});
-		} catch (error) {
-			console.error("Failed to retrieve yearly goal data for module:", moduleIdentifier, "Error:", error);
-		}
-	},
+	}
 });
