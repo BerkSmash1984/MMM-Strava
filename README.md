@@ -3,16 +3,67 @@
 This is a fork of the [MMM-Strava](https://github.com/ianperrin/MMM-Strava) MagicMirror module, originally created by Ian Perrin. 
 
 ## New Features in This Fork:
-- Added shoe mileage tracker functionality.
-- Display yearly running goal progress with miles ahead/behind pace.
-- Customizable font sizes and table styling.
+- Added shoe mileage tracker functionality with the `mode: "shoes",` config parameter
+- Display yearly running goal progress with miles ahead/behind pace with the `mode: "goal",` config paramter.
 
 ![image](https://github.com/user-attachments/assets/cf16d6d5-44f7-4df8-bdd4-24d8abadef8b)
 
 ![image](https://github.com/user-attachments/assets/baa2de00-2bd5-4bda-816a-36669aa069ba)
 
+For the Shoe Mileage tracker, add the module to the config file (`~/MagicMirror/config/config.js`) for your mirror.
 
-For detailed documentation, refer to the [original MMM-Strava README](https://github.com/ianperrin/MMM-Strava).
+   ```javascript
+     {
+             module: "MMM-Strava",
+             header: "Shoe Mileage Tracker",
+             disabled: false,
+             position: "top_left",
+             config: {
+                     debug: false,
+                     client_id: "your_strava_client_id",
+                     client_secret: "your_strava_api_client_secret",
+                     mode: "shoes",  // New mode for shoes
+                     gear_ids: ["g20448155","g18303887", "g19507068"],  // Replace with your actual gear IDs
+                     updateInterval: "86400000",
+                     reloadInterval: "86400000",
+               }
+     },
+   ];
+   ```
+The easiest way to obtain your gear ID is to access your Strava account on a PC, and go to Settings>Gear (https://www.strava.com/settings/gear):
+
+![image](https://github.com/user-attachments/assets/b35b0e3c-319f-4b97-823c-37e33f9ccab7)
+
+From there, open the dev console for your browser by hitting F12 on your keyboard, then choose the select element tool in the dev console pane, then select the gear you want to track, and you should see the associated data id in the dev console window:
+
+![image](https://github.com/user-attachments/assets/c2779220-8534-45f9-bdf6-97257c45833f)
+
+The `data-id` numner is your gear ID, but in your config, you have to add a 'g' in front of the number. So for the 	Adidas Adizero Adios Pro 3, with nickname AP3s Blue Camo, that I setup in the Gear section within Strava, you can see the `data-id` is `1830388` so within my config.js, that is listed as `g18303887`
+
+You can add as many gear IDs as you like. The miles remaining are pulled from the max miles you set for the gear in question, in Strava. Also note that the shoe name displayed in the module is the nickname you give it in Strava, which allows for displaying the same shoe make and model with unique names. Retired shoes are not shown. 
+
+For the Annual Mileage Goal progress tracker, add the module to the config file (`~/MagicMirror/config/config.js`) for your mirror.
+
+   ```javascript
+     {
+             module: "MMM-Strava",
+             header: "Annual Mileage Goal",
+             disabled: false,
+             position: "top_right",
+             config: {
+                       debug: false,
+                       client_id: "your_strava_client_id",
+                       client_secret: "YOUR STRAVA CLIENT SECRET HERE",
+                       mode: "goal",  // New mode for goal
+                       goalDistance: 2000 * 1609.34, // 2000 miles converted to meters. Put your annual mileage goal number here.
+                       updateInterval: "86400000",
+                       reloadInterval: "86400000",
+                   }
+         },
+   ];
+   ```
+
+For setting up and configuring the wider MMM-Strava module, refer to the [original MMM-Strava README](https://github.com/ianperrin/MMM-Strava), which is shown in full below:
 
 ## Original MMM-Strava README.md comments below
 
